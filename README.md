@@ -1,6 +1,6 @@
 # EF_SYS | PowerShell AD & M365 Admin Scripts
 
-> **Elazar Ferrer** — IT Systems & Identity Administrator | Active DoD Secret Clearance  
+> **Elazar Ferrer** — IT Systems & Identity Administrator 
 > Active Directory • Microsoft 365 • Azure AD • PowerShell Automation
 
 Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity systems in regulated environments (HIPAA, DoD).
@@ -84,4 +84,3 @@ Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrato
 
 - 🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)
 - 💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
-- 🔐 Active DoD Secret Clearance
