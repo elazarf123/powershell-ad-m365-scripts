@@ -1,13 +1,34 @@
 # EF_SYS | PowerShell AD & M365 Admin Scripts
 
-> **Elazar Ferrer** — IT Systems & Identity Administrator 
+> **Elazar Ferrer** — IT Systems & Identity Administrator
 > Active Directory • Microsoft 365 • Azure AD • PowerShell Automation
 
-Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity systems in regulated environments (HIPAA, DoD).
+Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity systems in regulated environments (HIPAA, NIST CSF 2.0).
 
 ---
 
 ## Scripts
+
+### 👤 [New-BulkADUsers.ps1](./New-BulkADUsers.ps1)
+Reads a structured CSV file and bulk-provisions AD user accounts using `New-ADUser`. Places each user in the correct OU based on department, assigns a temporary password, enables the account, and exports a timestamped results log.
+
+**Use case:** New hire onboarding, bulk imports, lab provisioning.
+
+```powershell
+# Basic run using default SampleUsers.csv
+.\New-BulkADUsers.ps1
+
+# Custom CSV and log path
+.\New-BulkADUsers.ps1 -CSVPath "C:\Imports\NewHires.csv" -LogPath "C:\Logs\Results.csv"
+
+# Preview mode — no accounts created
+.\New-BulkADUsers.ps1 -WhatIf
+```
+
+**Input:** `SampleUsers.csv` (included) — columns: FirstName, LastName, Username, Department, OU, Email, Title
+**Output:** `BulkADUsers_Log_<timestamp>.csv` with per-user status (Created / Skipped / Failed).
+
+---
 
 ### 🔍 [Get-ADStaleUsers.ps1](./Get-ADStaleUsers.ps1)
 Finds enabled AD accounts that haven't logged in within a configurable threshold (default: 90 days). Exports a CSV report and optionally disables accounts.
@@ -22,7 +43,27 @@ Finds enabled AD accounts that haven't logged in within a configurable threshold
 .\Get-ADStaleUsers.ps1 -DaysInactive 60 -DisableAccounts -WhatIf
 ```
 
-**Output:** `StaleUsers_2025-01-15.csv` with username, department, last logon, days inactive, manager.
+**Output:** `StaleUsers_<date>.csv` with username, department, last logon, days inactive, manager.
+
+---
+
+### 🗂️ [Get-ADGroupAudit.ps1](./Get-ADGroupAudit.ps1)
+Enumerates AD security and distribution groups using `Get-ADGroupMember` and exports a full membership report. Enriches each member with enabled status, department, and last logon date. Supports nested group resolution.
+
+**Use case:** Quarterly access reviews, privilege audits, compliance documentation.
+
+```powershell
+# Audit all groups in the domain
+.\Get-ADGroupAudit.ps1
+
+# Target specific groups and resolve nested members
+.\Get-ADGroupAudit.ps1 -GroupFilter "IT-*" -IncludeNestedMembers
+
+# Scope to a specific OU
+.\Get-ADGroupAudit.ps1 -SearchBase "OU=Groups,DC=corp,DC=local" -OutputPath "C:\Reports\Audit.csv"
+```
+
+**Output:** `ADGroupAudit_<timestamp>.csv` with group name, category, scope, member details, enabled status, and last logon.
 
 ---
 
@@ -39,7 +80,7 @@ Connects to Microsoft Graph and exports a full M365 license assignment report �
 .\Get-M365LicenseReport.ps1 -ShowUnlicensed -ExportPath "C:\Reports\Licenses.csv"
 ```
 
-**Requires:** `Microsoft.Graph` PowerShell SDK — `Install-Module Microsoft.Graph`
+**Requires:** `Install-Module Microsoft.Graph`
 
 ---
 
@@ -63,24 +104,20 @@ Backs up every GPO in the domain to timestamped folders, generates an HTML repor
 ## Requirements
 
 | Script | Module Required | Permissions |
-|---|---|---|
-| Get-ADStaleUsers.ps1 | `ActiveDirectory` | Domain read / Account Operator |
-| Get-M365LicenseReport.ps1 | `Microsoft.Graph` | User.Read.All, Org.Read.All |
-| Backup-AllGPOs.ps1 | `GroupPolicy` | GPO Backup rights / Domain Admin |
+|--------|----------------|-------------|
+| New-BulkADUsers.ps1 | ActiveDirectory | Domain Admin or delegated account creation |
+| Get-ADStaleUsers.ps1 | ActiveDirectory | Domain read / Account Operator |
+| Get-ADGroupAudit.ps1 | ActiveDirectory | Domain read |
+| Get-M365LicenseReport.ps1 | Microsoft.Graph | User.Read.All, Org.Read.All |
+| Backup-AllGPOs.ps1 | GroupPolicy | GPO Backup rights / Domain Admin |
 
----
-
-## Environment
-
-- Windows Server 2019 / 2022
-- PowerShell 5.1+
-- RSAT Tools (for AD and GPO modules)
+**Environment:** Windows Server 2019 / 2022 • PowerShell 5.1+ • RSAT Tools
 
 ---
 
 ## About
 
-Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with 3+ years managing enterprise AD, M365, and Azure AD environments.
+Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with 3+ years managing enterprise AD, M365, and Azure AD environments in healthcare-regulated settings.
 
-- 🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)
-- 💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
+🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)
+💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
