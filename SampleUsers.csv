@@ -1,0 +1,11 @@
+FirstName,LastName,Username,Department,OU,Email,Title
+John,Smith,jsmith,IT,"OU=IT,OU=Users,DC=corp,DC=local",jsmith@corp.local,Systems Administrator
+Maria,Garcia,mgarcia,HR,"OU=HR,OU=Users,DC=corp,DC=local",mgarcia@corp.local,HR Specialist
+David,Johnson,djohnson,Finance,"OU=Finance,OU=Users,DC=corp,DC=local",djohnson@corp.local,Financial Analyst
+Sarah,Williams,swilliams,IT,"OU=IT,OU=Users,DC=corp,DC=local",swilliams@corp.local,Help Desk Technician
+James,Brown,jbrown,Operations,"OU=Operations,OU=Users,DC=corp,DC=local",jbrown@corp.local,Operations Manager
+Emily,Davis,edavis,HR,"OU=HR,OU=Users,DC=corp,DC=local",edavis@corp.local,Recruiter
+Michael,Martinez,mmartinez,Finance,"OU=Finance,OU=Users,DC=corp,DC=local",mmartinez@corp.local,Accounts Payable
+Ashley,Wilson,awilson,IT,"OU=IT,OU=Users,DC=corp,DC=local",awilson@corp.local,Network Administrator
+Chris,Taylor,ctaylor,Operations,"OU=Operations,OU=Users,DC=corp,DC=local",ctaylor@corp.local,Logistics Coordinator
+Jessica,Anderson,janderson,HR,"OU=HR,OU=Users,DC=corp,DC=local",janderson@corp.local,Benefits Administrator
