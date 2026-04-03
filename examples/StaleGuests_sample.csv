@@ -1,0 +1,6 @@
+DisplayName,UPN,Mail,Department,AccountEnabled,ExternalUserState,InviteAccepted,LastSignIn,DaysSinceSignIn,AccountCreated,RecommendedAction
+"Vendor A Partner","vendora.contact_vendor-a.com#EXT#@contoso.onmicrosoft.com","vendora.contact@vendor-a.com","",True,"Accepted","2023-01-15","2023-08-20T14:00:00Z",228,2023-01-15,Review
+"External Consultant","jdoe_consulting-co.com#EXT#@contoso.onmicrosoft.com","jdoe@consulting-co.com","IT",True,"Accepted","2022-06-01","Never",Never,2022-06-01,Review
+"Partner B Rep","partner.b_example.org#EXT#@contoso.onmicrosoft.com","partner.b@example.org","Sales",True,"PendingAcceptance","2024-09-10","Never",Never,2024-09-10,Review
+"Old Vendor Contact","old.vendor_defunct.com#EXT#@contoso.onmicrosoft.com","","",False,"Accepted","2021-03-22","2021-09-01T08:00:00Z",940,2021-03-22,Review
+"Temp Worker","temp.worker_staffing.net#EXT#@contoso.onmicrosoft.com","temp.worker@staffing.net","Operations",True,"Accepted","2024-02-01","2024-03-15T10:30:00Z",383,2024-02-01,Review

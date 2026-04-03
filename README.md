@@ -1,180 +1,346 @@
 # EF_SYS | PowerShell AD & M365 Admin Scripts
 
-> **Elazar Ferrer** — IT Systems & Identity Administrator
-> Active Directory • Microsoft 365 • Azure AD • PowerShell Automation
+> **Elazar Ferrer** — IT Systems & Identity Administrator  
+> Active Directory • Microsoft 365 • Entra ID • Intune • PowerShell Automation
 
-![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue?logo=powershell)
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B%20%7C%207%2B-blue?logo=powershell)
+![Graph SDK](https://img.shields.io/badge/Microsoft.Graph-SDK-0078d4?logo=microsoft)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 
-Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity systems in regulated environments (HIPAA, NIST CSF 2.0).
+Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity, endpoint, and access systems in regulated environments (HIPAA, NIST CSF 2.0, SOC 2).
 
 ---
 
-## 🎯 Problem This Solves
+## 🎯 What Problems Do These Scripts Solve?
 
-Managing Active Directory and Microsoft 365 at enterprise scale is time-consuming and error-prone when done manually. These scripts eliminate repetitive tasks and reduce human error in critical identity and access management workflows:
-
-- Reduces bulk user provisioning from **2+ hours to under 5 minutes**
-- Automates stale account detection to reduce **security exposure** from orphaned identities
-- Generates compliance-ready audit reports for **HIPAA / NIST CSF 2.0 / SOC 2** reviews
-- Optimizes M365 license spend through clear **cost visibility**
-- Enables GPO **disaster recovery** with versioned, automated backups
-
----
-
-## 🚀 Features
-
-- [x] Bulk AD user provisioning from CSV with per-user OU placement and results logging
-- [x] Stale account detection with configurable inactivity threshold and optional auto-disable
-- [x] AD group membership auditing with nested group resolution and enriched user detail
-- [x] Microsoft 365 license reporting via Microsoft Graph with SKU-to-friendly-name mapping
-- [x] Full GPO domain backup with HTML report, ZIP compression, and retention pruning
+| Problem | Script | Time Saved |
+|---------|--------|-----------|
+| Bulk-provision 50+ new hires manually | `New-BulkADUsers.ps1` | 2+ hours → **< 5 min** |
+| Find dormant AD accounts before an audit | `Get-ADStaleUsers.ps1` | Hours of manual review → **automated** |
+| Produce quarterly group-membership evidence | `Get-ADGroupAudit.ps1` | Day-long task → **minutes** |
+| Identify wasted M365 license spend | `Get-LicenseOptimizationReport.ps1` | Unknown waste → **itemized** |
+| Clean up lingering B2B guest accounts | `Get-StaleGuestReport.ps1` | Blind spots → **quantified + actionable** |
+| Document Conditional Access before changes | `Export-ConditionalAccessPolicies.ps1` | Manual screenshots → **automated CSV/JSON** |
+| Identify non-compliant Intune devices | `Get-IntuneDeviceCompliance.ps1` | Manual portal review → **filterable report** |
+| Back up all GPOs before a change window | `Backup-AllGPOs.ps1` | Manual export → **one command** |
 
 ---
 
-## 🔧 Prerequisites
+## 🗂️ Repository Structure
 
-| Requirement | Details |
-|-------------|---------|
-| PowerShell  | 5.1 or higher |
-| OS          | Windows Server 2019 / 2022 (with RSAT tools) |
-| AD Scripts  | ActiveDirectory PowerShell module (`RSAT: Active Directory DS and LDS Tools`) |
-| M365 Script | Microsoft Graph PowerShell SDK (`Install-Module Microsoft.Graph`) |
-| GPO Script  | GroupPolicy module (included with RSAT Group Policy Management Tools) |
-| Permissions | See per-script requirements in the table below |
-
----
-
-## Scripts
-
-### 👤 [New-BulkADUsers.ps1](./New-BulkADUsers.ps1)
-Reads a structured CSV file and bulk-provisions AD user accounts using `New-ADUser`. Places each user in the correct OU based on department, assigns a temporary password, enables the account, and exports a timestamped results log.
-
-**Use case:** New hire onboarding, bulk imports, lab provisioning.
-
-```powershell
-# Basic run using default SampleUsers.csv
-.\New-BulkADUsers.ps1
-
-# Custom CSV and log path
-.\New-BulkADUsers.ps1 -CSVPath "C:\Imports\NewHires.csv" -LogPath "C:\Logs\Results.csv"
-
-# Preview mode — no accounts created
-.\New-BulkADUsers.ps1 -WhatIf
+```
+powershell-ad-m365-scripts/
+├── src/
+│   ├── graph/                        # Microsoft Graph-based scripts (M365 / Entra / Intune)
+│   │   ├── Get-LicenseOptimizationReport.ps1
+│   │   ├── Get-StaleGuestReport.ps1
+│   │   ├── Export-ConditionalAccessPolicies.ps1
+│   │   └── Get-IntuneDeviceCompliance.ps1
+│   └── helpers/
+│       └── Write-Log.ps1             # Shared logging module (imported by all src/ scripts)
+├── tests/
+│   └── Write-Log.Tests.ps1           # Pester 5 unit tests for logging helper
+├── docs/                             # Runbook documentation for each major script
+│   ├── Get-LicenseOptimizationReport.md
+│   ├── Get-StaleGuestReport.md
+│   ├── Export-ConditionalAccessPolicies.md
+│   └── Get-IntuneDeviceCompliance.md
+├── examples/                         # Sanitized sample CSV outputs (no real tenant data)
+│   ├── LicenseOptimization_Users_sample.csv
+│   ├── LicenseOptimization_SKUs_sample.csv
+│   ├── StaleGuests_sample.csv
+│   ├── ConditionalAccessPolicies_sample.csv
+│   └── IntuneDeviceCompliance_sample.csv
+│
+│── New-BulkADUsers.ps1               # AD: Bulk user provisioning from CSV
+│── Get-ADStaleUsers.ps1              # AD: Stale account detection + optional disable
+│── Get-ADGroupAudit.ps1              # AD: Group membership audit with nested resolution
+│── Get-M365LicenseReport.ps1         # Graph: M365 license assignment report
+│── Backup-AllGPOs.ps1                # GPO: Full domain backup with HTML report
+│── SampleUsers.csv                   # Sample input for New-BulkADUsers.ps1
+│
+├── .gitignore
+├── SECURITY.md
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+└── LICENSE
 ```
 
-**Input:** `SampleUsers.csv` (included) — columns: FirstName, LastName, Username, Department, OU, Email, Title
-**Output:** `BulkADUsers_Log_<timestamp>.csv` with per-user status (Created / Skipped / Failed).
+---
+
+## 🔧 Prerequisites & Installation
+
+### Step 1 — PowerShell Version
+
+```powershell
+$PSVersionTable.PSVersion   # Check your version
+```
+
+- **Minimum:** PowerShell 5.1 (Windows PowerShell — for AD and GPO scripts)
+- **Recommended:** PowerShell 7.4+ (for `src/graph/` scripts — better null-safety, performance)
+
+### Step 2 — Install Required Modules
+
+```powershell
+# Microsoft Graph SDK (required for all src/graph/ scripts)
+Install-Module Microsoft.Graph -Scope CurrentUser
+
+# Active Directory module — install RSAT on Windows Server / Windows 10+
+# Server: Add-WindowsFeature RSAT-AD-PowerShell
+# Client: Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
+
+# Verify
+Get-Module Microsoft.Graph -ListAvailable | Select-Object Name, Version
+```
+
+### Step 3 — Clone or Download
+
+```powershell
+git clone https://github.com/elazarf123/powershell-ad-m365-scripts.git
+cd powershell-ad-m365-scripts
+```
 
 ---
 
-### 🔍 [Get-ADStaleUsers.ps1](./Get-ADStaleUsers.ps1)
-Finds enabled AD accounts that haven't logged in within a configurable threshold (default: 90 days). Exports a CSV report and optionally disables accounts.
+## 🔐 Authentication Options
 
-**Use case:** Routine access reviews, HIPAA/NIST compliance audits, attack surface reduction.
+All `src/graph/` scripts connect to Microsoft Graph. **No credentials are ever stored in code.**  
+See [SECURITY.md](./SECURITY.md) for the full policy.
+
+### Option A — Interactive (developer / one-off runs)
 
 ```powershell
-# Basic run — find accounts inactive 90+ days
-.\Get-ADStaleUsers.ps1
+# Each script calls Connect-MgGraph automatically.
+# A browser sign-in window opens; consent is cached for the session.
+.\src\graph\Get-LicenseOptimizationReport.ps1
+```
 
-# Custom threshold + auto-disable (use -WhatIf first!)
+### Option B — Certificate-Based App Registration (automation / scheduled tasks)
+
+```powershell
+# 1. Create an App Registration in Entra ID and upload a certificate.
+# 2. Grant the app the permissions listed below (no user sign-in needed).
+# 3. Store IDs in environment variables — NOT in the script file.
+
+$env:TENANT_ID       = "<your-tenant-guid>"
+$env:APP_CLIENT_ID   = "<app-registration-client-id>"
+$env:CERT_THUMBPRINT = "<thumbprint-from-cert-store>"
+
+Connect-MgGraph -ClientId $env:APP_CLIENT_ID `
+                -TenantId $env:TENANT_ID `
+                -CertificateThumbprint $env:CERT_THUMBPRINT -NoWelcome
+
+.\src\graph\Get-IntuneDeviceCompliance.ps1
+```
+
+### Option C — Managed Identity (Azure-hosted workloads)
+
+```powershell
+Connect-MgGraph -Identity   # Uses the VM/Function App's system-assigned managed identity
+```
+
+---
+
+## 📜 Scripts
+
+### 🆕 Microsoft Graph Scripts (`src/graph/`)
+
+---
+
+#### 📊 [Get-LicenseOptimizationReport.ps1](./src/graph/Get-LicenseOptimizationReport.ps1)
+Identifies M365 license waste: inactive licensed users, high-cost SKU assignments for low-activity accounts, and over-provisioned SKUs. Exports per-user and org-level SKU CSV reports.
+
+**Use case:** Monthly license reviews, finance reporting, offboarding hygiene.
+
+```powershell
+# Default run
+.\src\graph\Get-LicenseOptimizationReport.ps1
+
+# 60-day inactivity threshold, custom output folder
+.\src\graph\Get-LicenseOptimizationReport.ps1 -InactiveDays 60 -ExportPath "C:\Reports"
+```
+
+**Required scopes:** `User.Read.All`, `Organization.Read.All`, `AuditLog.Read.All`  
+**Sample output:** [examples/LicenseOptimization_Users_sample.csv](./examples/LicenseOptimization_Users_sample.csv)  
+**Full docs:** [docs/Get-LicenseOptimizationReport.md](./docs/Get-LicenseOptimizationReport.md)
+
+---
+
+#### 👥 [Get-StaleGuestReport.ps1](./src/graph/Get-StaleGuestReport.ps1)
+Finds B2B guest accounts that haven't signed in for a configurable period (default: 90 days). Supports safe disable and remove actions with `-WhatIf` / `-Confirm`.
+
+**Use case:** Quarterly external access reviews, HIPAA/NIST identity hygiene, attack surface reduction.
+
+```powershell
+# Report only — no changes
+.\src\graph\Get-StaleGuestReport.ps1
+
+# Preview which accounts would be disabled
+.\src\graph\Get-StaleGuestReport.ps1 -DisableGuests -WhatIf
+
+# Disable with per-account confirmation
+.\src\graph\Get-StaleGuestReport.ps1 -DisableGuests -Confirm
+```
+
+**Required scopes:** `User.Read.All`, `AuditLog.Read.All` (+ `User.ReadWrite.All` for write actions)  
+**Sample output:** [examples/StaleGuests_sample.csv](./examples/StaleGuests_sample.csv)  
+**Full docs:** [docs/Get-StaleGuestReport.md](./docs/Get-StaleGuestReport.md)
+
+---
+
+#### 🛡️ [Export-ConditionalAccessPolicies.ps1](./src/graph/Export-ConditionalAccessPolicies.ps1)
+Read-only export of all Conditional Access policies — state, user/group/app assignments, grant controls (MFA, compliant device, block), and session controls. Optional full-fidelity JSON archive.
+
+**Use case:** Pre-change baselines, post-change validation, SOC 2 / ISO 27001 compliance evidence.
+
+```powershell
+# Export to CSV
+.\src\graph\Export-ConditionalAccessPolicies.ps1
+
+# Export CSV + JSON archive
+.\src\graph\Export-ConditionalAccessPolicies.ps1 -ExportPath "C:\Reports\CA.csv" -ExportJson
+```
+
+**Required scopes:** `Policy.Read.All`  
+**Sample output:** [examples/ConditionalAccessPolicies_sample.csv](./examples/ConditionalAccessPolicies_sample.csv)  
+**Full docs:** [docs/Export-ConditionalAccessPolicies.md](./docs/Export-ConditionalAccessPolicies.md)
+
+---
+
+#### 📱 [Get-IntuneDeviceCompliance.ps1](./src/graph/Get-IntuneDeviceCompliance.ps1)
+Reports device compliance state, last check-in, OS version, encryption status, and jailbreak detection for all Intune-managed devices. Filterable by compliance state and OS platform.
+
+**Use case:** Security reviews, endpoint posture reporting, stale device identification, CIS/NIST endpoint controls evidence.
+
+```powershell
+# Full report
+.\src\graph\Get-IntuneDeviceCompliance.ps1
+
+# Non-compliant Windows devices only
+.\src\graph\Get-IntuneDeviceCompliance.ps1 -ComplianceFilter NonCompliant -PlatformFilter Windows
+```
+
+**Required scopes:** `DeviceManagementManagedDevices.Read.All`, `User.Read.All`  
+**Sample output:** [examples/IntuneDeviceCompliance_sample.csv](./examples/IntuneDeviceCompliance_sample.csv)  
+**Full docs:** [docs/Get-IntuneDeviceCompliance.md](./docs/Get-IntuneDeviceCompliance.md)
+
+---
+
+### 🖥️ Active Directory Scripts (root)
+
+---
+
+#### 👤 [New-BulkADUsers.ps1](./New-BulkADUsers.ps1)
+Bulk-provisions AD user accounts from a CSV. Places each user in the correct OU, sets a temporary password, enforces change-at-first-logon, and exports a timestamped results log.
+
+```powershell
+.\New-BulkADUsers.ps1                                    # Uses default SampleUsers.csv
+.\New-BulkADUsers.ps1 -CSVPath "C:\Imports\NewHires.csv" # Custom CSV
+.\New-BulkADUsers.ps1 -WhatIf                            # Preview only
+```
+
+**Input:** `SampleUsers.csv` | **Output:** `BulkADUsers_Log_<timestamp>.csv`
+
+---
+
+#### 🔍 [Get-ADStaleUsers.ps1](./Get-ADStaleUsers.ps1)
+Finds enabled AD accounts inactive beyond a threshold (default: 90 days). Exports a CSV and optionally disables accounts with `-WhatIf` support.
+
+```powershell
+.\Get-ADStaleUsers.ps1
 .\Get-ADStaleUsers.ps1 -DaysInactive 60 -DisableAccounts -WhatIf
 ```
 
-**Output:** `StaleUsers_<date>.csv` with username, department, last logon, days inactive, manager.
+**Output:** `StaleUsers_<date>.csv`
 
 ---
 
-### 🗂️ [Get-ADGroupAudit.ps1](./Get-ADGroupAudit.ps1)
-Enumerates AD security and distribution groups using `Get-ADGroupMember` and exports a full membership report. Enriches each member with enabled status, department, and last logon date. Supports nested group resolution.
-
-**Use case:** Quarterly access reviews, privilege audits, compliance documentation.
+#### 🗂️ [Get-ADGroupAudit.ps1](./Get-ADGroupAudit.ps1)
+Enumerates all AD groups and exports enriched membership reports (enabled status, department, last logon). Supports nested group resolution and OU scoping.
 
 ```powershell
-# Audit all groups in the domain
 .\Get-ADGroupAudit.ps1
-
-# Target specific groups and resolve nested members
 .\Get-ADGroupAudit.ps1 -GroupFilter "IT-*" -IncludeNestedMembers
-
-# Scope to a specific OU
-.\Get-ADGroupAudit.ps1 -SearchBase "OU=Groups,DC=corp,DC=local" -OutputPath "C:\Reports\Audit.csv"
 ```
 
-**Output:** `ADGroupAudit_<timestamp>.csv` with group name, category, scope, member details, enabled status, and last logon.
+**Output:** `ADGroupAudit_<timestamp>.csv`
 
 ---
 
-### 📋 [Get-M365LicenseReport.ps1](./Get-M365LicenseReport.ps1)
-Connects to Microsoft Graph and exports a full M365 license assignment report — who has what license, last sign-in, department, and available seats per SKU.
-
-**Use case:** License cost optimization, offboarding audits, compliance documentation.
+#### 📋 [Get-M365LicenseReport.ps1](./Get-M365LicenseReport.ps1)
+Connects to Microsoft Graph and exports a per-user license assignment report with SKU-to-friendly-name mapping, available seats, and last sign-in.
 
 ```powershell
-# Export licensed users to CSV
 .\Get-M365LicenseReport.ps1
-
-# Include unlicensed users
 .\Get-M365LicenseReport.ps1 -ShowUnlicensed -ExportPath "C:\Reports\Licenses.csv"
 ```
 
-**Requires:** `Install-Module Microsoft.Graph`
-
 ---
 
-### 💾 [Backup-AllGPOs.ps1](./Backup-AllGPOs.ps1)
-Backs up every GPO in the domain to timestamped folders, generates an HTML report with status, linked OUs, and modification dates. Supports ZIP compression and auto-pruning of old backups.
-
-**Use case:** Pre-change documentation, disaster recovery, change management compliance.
+#### 💾 [Backup-AllGPOs.ps1](./Backup-AllGPOs.ps1)
+Backs up every domain GPO to timestamped folders, generates an HTML report, supports ZIP compression and retention pruning.
 
 ```powershell
-# Full backup with defaults
 .\Backup-AllGPOs.ps1
-
-# Custom path, ZIP archive, keep 14 days of backups
 .\Backup-AllGPOs.ps1 -BackupRoot "D:\Backups\GPO" -CreateZip -MaxBackups 14
 ```
 
-**Output:** Timestamped folder + HTML report with color-coded status per GPO.
+---
+
+## 📋 Requirements & Permissions
+
+| Script | Module(s) Required | Minimum Graph Scopes / AD Rights |
+|--------|--------------------|----------------------------------|
+| `New-BulkADUsers.ps1` | `ActiveDirectory` | Domain Admin or delegated account creation |
+| `Get-ADStaleUsers.ps1` | `ActiveDirectory` | Domain read / Account Operator |
+| `Get-ADGroupAudit.ps1` | `ActiveDirectory` | Domain read |
+| `Get-M365LicenseReport.ps1` | `Microsoft.Graph` | `User.Read.All`, `Organization.Read.All` |
+| `Backup-AllGPOs.ps1` | `GroupPolicy` | GPO Backup rights / Domain Admin |
+| `Get-LicenseOptimizationReport.ps1` | `Microsoft.Graph` | `User.Read.All`, `Organization.Read.All`, `AuditLog.Read.All` |
+| `Get-StaleGuestReport.ps1` | `Microsoft.Graph` | `User.Read.All`, `AuditLog.Read.All` (+ `User.ReadWrite.All` for write actions) |
+| `Export-ConditionalAccessPolicies.ps1` | `Microsoft.Graph` | `Policy.Read.All` |
+| `Get-IntuneDeviceCompliance.ps1` | `Microsoft.Graph` | `DeviceManagementManagedDevices.Read.All`, `User.Read.All` |
+
+**Principle of Least Privilege:** Always grant only the scopes your run requires. For report-only runs, read scopes are sufficient. See [SECURITY.md](./SECURITY.md) for app registration guidance.
 
 ---
 
-## Requirements
+## 🧪 Running the Tests
 
-| Script | Module Required | Permissions |
-|--------|----------------|-------------|
-| New-BulkADUsers.ps1 | ActiveDirectory | Domain Admin or delegated account creation |
-| Get-ADStaleUsers.ps1 | ActiveDirectory | Domain read / Account Operator |
-| Get-ADGroupAudit.ps1 | ActiveDirectory | Domain read |
-| Get-M365LicenseReport.ps1 | Microsoft.Graph | User.Read.All, Org.Read.All |
-| Backup-AllGPOs.ps1 | GroupPolicy | GPO Backup rights / Domain Admin |
+```powershell
+# Install Pester 5 (once)
+Install-Module Pester -Force -SkipPublisherCheck
 
-**Environment:** Windows Server 2019 / 2022 • PowerShell 5.1+ • RSAT Tools
+# Run all tests
+Invoke-Pester .\tests\ -Output Detailed
+
+# Run a single test file
+Invoke-Pester .\tests\Write-Log.Tests.ps1 -Output Detailed
+```
 
 ---
 
 ## 🔒 Security & Best Practices
 
-> ⚠️ These scripts interact with critical identity infrastructure. Follow these practices before and during use:
+> ⚠️ These scripts interact with critical identity and endpoint infrastructure. Read [SECURITY.md](./SECURITY.md) before running in production.
 
-- **Test before production** — Run with `-WhatIf` (where supported) in a lab or staging environment first
-- **Least-privilege accounts** — Use dedicated service accounts scoped to only the permissions each script requires; avoid running as Domain Admin where possible
-- **Review CSV inputs** — Validate CSV data before running bulk provisioning to prevent unintended account creation
-- **Audit all executions** — Keep the timestamped logs generated by each script; store them in a secured, access-controlled location
-- **Protect the scripts** — Store this repository in a controlled location; restrict write access to prevent unauthorized modification
-- **Rotate credentials** — Do not hardcode credentials; use the `-DefaultPassword` parameter to supply temporary passwords and enforce change-at-first-logon
-- **Secure Graph connections** — Use app registrations with certificate-based auth for unattended `Get-M365LicenseReport.ps1` runs rather than delegated interactive login
+- **No secrets in code** — credentials, tokens, and tenant IDs must never be committed (`.gitignore` blocks common secret file types)
+- **Test before production** — run with `-WhatIf` (where supported) in a lab or staging environment first
+- **Least-privilege** — use dedicated service accounts or app registrations scoped to the permissions each script needs
+- **Audit all executions** — keep the timestamped logs generated by each script in a secured, access-controlled location
+- **Secure Graph auth** — prefer certificate-based or managed-identity authentication for unattended runs over interactive sign-in
+- **Review CSV inputs** — validate bulk-operation inputs before running to prevent unintended account creation or deletion
 
 ---
 
 ## About
 
-Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with 3+ years managing enterprise AD, M365, and Azure AD environments in healthcare-regulated settings.
+Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with experience managing enterprise AD, M365, Entra ID, and Intune environments in healthcare-regulated settings.
 
-🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)
+🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)  
 💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
 
 ---
 
-*See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines · [CHANGELOG.md](./CHANGELOG.md) for version history · [LICENSE](./LICENSE) for terms of use*
+*See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines · [CHANGELOG.md](./CHANGELOG.md) for version history · [SECURITY.md](./SECURITY.md) for security policy · [LICENSE](./LICENSE) for terms of use*

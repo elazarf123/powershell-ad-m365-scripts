@@ -25,3 +25,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 _Changes staged for the next release will appear here._
+
+---
+
+## [2.0.0] — 2025-04-03
+
+### Added
+
+- **src/graph/Get-LicenseOptimizationReport.ps1** — Advanced M365 license waste analysis via Microsoft Graph. Identifies inactive licensed users, high-cost SKU assignments for low-activity users, and over-provisioned SKUs. Exports per-user and per-SKU CSV reports.
+- **src/graph/Get-StaleGuestReport.ps1** — B2B guest account hygiene via Microsoft Graph. Identifies external guests inactive beyond a configurable threshold. Supports `-DisableGuests` and `-RemoveGuests` with full `-WhatIf` / `-Confirm` safety.
+- **src/graph/Export-ConditionalAccessPolicies.ps1** — Read-only Conditional Access policy audit/export. Exports all CA policies to CSV with state, assignments, grant controls, and session controls. Optional JSON archive for full-fidelity baselines.
+- **src/graph/Get-IntuneDeviceCompliance.ps1** — Intune device compliance report via Microsoft Graph. Filterable by compliance state and OS platform. Flags non-compliant and stale check-in devices for remediation.
+- **src/helpers/Write-Log.ps1** — Centralized logging module shared across all scripts. Provides `Initialize-Log`, `Write-Log`, `Write-LogBanner`, and `Write-LogSummary` functions with colour-coded console output and optional structured file logging.
+- **tests/Write-Log.Tests.ps1** — Pester 5 unit tests for all logging helper functions.
+- **examples/** — Sanitized sample CSV outputs for all four new scripts and the existing license report.
+- **docs/** — Runbook-style documentation pages for each new script (prerequisites, auth options, parameters, examples, troubleshooting).
+- **.gitignore** — Comprehensive ignore rules for PowerShell artefacts, OS files, credential files, output CSVs, and IDE settings.
+- **SECURITY.md** — Security policy: no-secrets rule, recommended auth patterns (interactive, certificate, managed identity, Key Vault), least-privilege Graph scopes per script.
+
+### Changed
+
+- **README.md** — Upgraded to runbook standard: added installation steps, authentication options, least-privilege permissions table, folder structure overview, links to new scripts and docs.
+- **CONTRIBUTING.md** — Updated to reflect PowerShell 7+ preferred target, new `src/` folder structure, and module import pattern.

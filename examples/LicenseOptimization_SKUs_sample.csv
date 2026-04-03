@@ -1,0 +1,8 @@
+SkuPartNumber,FriendlyName,TotalLicenses,UsedLicenses,AvailableLicenses,UtilisationPct,OverProvisioned,Recommendation
+SPE_E3,"Microsoft 365 E3",150,132,18,88.0,True,"Consider reducing purchased quantity by 18 seats"
+SPE_E5,"Microsoft 365 E5",25,17,8,68.0,False,
+O365_BUSINESS_PREMIUM,"Microsoft 365 Business Premium",50,48,2,96.0,False,
+POWER_BI_PRO,"Power BI Pro",30,12,18,40.0,True,"Consider reducing purchased quantity by 18 seats"
+INTUNE_A,"Microsoft Intune",200,198,2,99.0,False,
+AAD_PREMIUM,"Azure AD Premium P1",200,145,55,72.5,True,"Consider reducing purchased quantity by 55 seats"
+EXCHANGESTANDARD,"Exchange Online Plan 1",10,4,6,40.0,False,
