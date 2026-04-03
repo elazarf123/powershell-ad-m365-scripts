@@ -4,15 +4,30 @@ Thank you for your interest in contributing. Contributions are welcome via pull 
 
 ---
 
+## Folder Structure
+
+| Folder | Contents |
+|--------|----------|
+| *(root)* | Legacy AD and GPO scripts (PowerShell 5.1+) |
+| `src/graph/` | Microsoft Graph-based scripts (PowerShell 7.2+ preferred) |
+| `src/helpers/` | Shared modules imported by `src/graph/` scripts |
+| `tests/` | Pester 5 unit tests |
+| `docs/` | Runbook-style documentation for each major script |
+| `examples/` | Sanitized sample CSV/JSON outputs (no real tenant data) |
+
+New Microsoft Graph scripts go in `src/graph/`. New AD/GPO scripts go in the root.
+
+---
+
 ## Code Standards
 
-- **PowerShell version:** All scripts must be compatible with PowerShell 5.1+. Avoid syntax or cmdlets that require PowerShell 7+.
+- **PowerShell version:** Root-level scripts must be compatible with PowerShell 5.1+. Scripts under `src/graph/` should target PowerShell 7.2+ (use null-conditional operators `?.`, `??`, etc. where helpful) while remaining compatible with 5.1 where practical.
 - **Comment-based help:** Every script must include a full comment-based help block with `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, `.EXAMPLE`, and `.NOTES` (Author, Version, Requires).
 - **CmdletBinding:** All scripts should use `[CmdletBinding()]`. Scripts that modify data should include `SupportsShouldProcess` to enable `-WhatIf` / `-Confirm` support.
 - **Error handling:** Use `try/catch` blocks around all AD and Graph API calls. Provide meaningful error messages and exit cleanly on unrecoverable errors.
-- **Output:** Use `Write-Host` with `-ForegroundColor` for console feedback. Use `Write-Warning` and `Write-Error` for non-fatal and fatal conditions, respectively.
-- **No hardcoded credentials:** Passwords, tokens, and secrets must never be committed. Use parameters with `[SecureString]` where applicable.
-- **Naming conventions:** Follow the approved PowerShell verb-noun naming standard (`Get-`, `New-`, `Backup-`). See the full verb list: `Get-Verb`.
+- **Logging:** Scripts in `src/graph/` should use the shared `Write-Log` helper from `src/helpers/Write-Log.ps1`. Root-level scripts use `Write-Host` with `-ForegroundColor` for console feedback.
+- **No hardcoded credentials:** Passwords, tokens, client secrets, and tenant IDs must never be committed. See [SECURITY.md](./SECURITY.md) for approved auth patterns.
+- **Naming conventions:** Follow the approved PowerShell verb-noun naming standard (`Get-`, `New-`, `Export-`, `Backup-`). See the full verb list: `Get-Verb`.
 
 ---
 

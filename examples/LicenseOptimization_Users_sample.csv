@@ -1,0 +1,8 @@
+DisplayName,UPN,UserType,Department,JobTitle,AccountEnabled,Licenses,LicenseCount,HasHighCostLicense,LastSignIn,DaysSinceSignIn,IsInactive,Recommendation,AccountCreated
+"Alex Johnson","alex.johnson@contoso.com","Member","Engineering","Senior Engineer",True,"Microsoft 365 E3",1,False,"2025-03-25T14:23:10Z",9,False,,2022-01-10
+"Maria Garcia","maria.garcia@contoso.com","Member","Sales","Account Executive",True,"Microsoft 365 E5",1,True,"2024-11-01T08:45:00Z",123,True,"Review/reclaim — inactive 123 days; Downgrade from high-cost SKU",2021-06-15
+"Bob Chen","bob.chen@contoso.com","Member","IT","Help Desk Analyst",True,"Microsoft 365 Business Premium",1,False,"2025-03-20T09:12:00Z",14,False,,2023-03-01
+"Sarah Miller","sarah.miller@contoso.com","Member","HR","HR Specialist",True,"Microsoft 365 E3",1,False,"2024-10-15T16:30:00Z",140,True,"Review/reclaim — inactive 140 days",2020-08-22
+"James Wilson","james.wilson@contoso.com","Member","Finance","CFO",True,"Microsoft 365 E5 | Power BI Pro",2,True,"2025-01-10T11:00:00Z",83,False,,2019-04-30
+"Vendor Guest","vendor.partner_external.com#EXT#@contoso.onmicrosoft.com","Guest","","",True,"Microsoft 365 E3",1,False,"2024-07-04T00:00:00Z",273,True,"Review/reclaim — inactive 273 days",2023-07-04
+"Lisa Brown","lisa.brown@contoso.com","Member","Marketing","Marketing Manager",False,"Microsoft 365 Business Premium",1,False,"2025-02-28T10:00:00Z",34,False,,2022-11-14
