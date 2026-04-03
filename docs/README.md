@@ -29,7 +29,7 @@ to single commands while maintaining a full audit trail.
 | 👤 Bulk Provisioning | [New-BulkADUsers](New-BulkADUsers.md) | Provisions 50+ AD users from CSV in minutes | 2+ hours → **< 5 min** |
 | 🔍 Stale Accounts | [Get-ADStaleUsers](Get-ADStaleUsers.md) | Detects dormant AD accounts before audits | Hours manual → **automated** |
 | 🗂️ Group Auditing | [Get-ADGroupAudit](Get-ADGroupAudit.md) | Produces quarterly access-review evidence | Day-long task → **minutes** |
-| 💾 GPO Backup | [Backup-AllGPOs](../Backup-AllGPOs.ps1) | Full domain GPO backup before every change window | Manual → **one command** |
+| 💾 GPO Backup | [Backup-AllGPOs](Backup-AllGPOs.md) | Full domain GPO backup before every change window | Manual → **one command** |
 
 ---
 
@@ -57,7 +57,7 @@ These scripts use the `ActiveDirectory` RSAT module and run against an on-premis
 | `New-BulkADUsers.ps1` | [📄 Runbook](New-BulkADUsers.md) | Domain Admin or delegated account-creation rights |
 | `Get-ADStaleUsers.ps1` | [📄 Runbook](Get-ADStaleUsers.md) | Domain read / Account Operator |
 | `Get-ADGroupAudit.ps1` | [📄 Runbook](Get-ADGroupAudit.md) | Domain read |
-| `Backup-AllGPOs.ps1` | *(see script header)* | GPO Backup rights / Domain Admin |
+| `Backup-AllGPOs.ps1` | [📄 Runbook](Backup-AllGPOs.md) | GPO Backup rights / Domain Admin |
 
 ---
 

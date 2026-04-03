@@ -51,7 +51,8 @@ powershell-ad-m365-scripts/
 │   ├── Get-IntuneDeviceCompliance.md
 │   ├── New-BulkADUsers.md
 │   ├── Get-ADStaleUsers.md
-│   └── Get-ADGroupAudit.md
+│   ├── Get-ADGroupAudit.md
+│   └── Backup-AllGPOs.md
 ├── examples/                         # Sanitized sample CSV outputs (no real tenant data)
 │   ├── LicenseOptimization_Users_sample.csv
 │   ├── LicenseOptimization_SKUs_sample.csv
@@ -294,6 +295,8 @@ Backs up every domain GPO to timestamped folders, generates an HTML report, supp
 .\Backup-AllGPOs.ps1
 .\Backup-AllGPOs.ps1 -BackupRoot "D:\Backups\GPO" -CreateZip -MaxBackups 14
 ```
+
+**Full docs:** [docs/Backup-AllGPOs.md](./docs/Backup-AllGPOs.md)
 
 ---
 
