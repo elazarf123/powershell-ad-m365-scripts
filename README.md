@@ -10,6 +10,8 @@
 
 Production-grade PowerShell scripts for enterprise AD and M365 administration. Built from hands-on experience managing identity, endpoint, and access systems in regulated environments (HIPAA, NIST CSF 2.0, SOC 2).
 
+📄 **[View the full runbook docs index →](./docs/README.md)**
+
 ---
 
 ## 🎯 What Problems Do These Scripts Solve?
@@ -41,11 +43,15 @@ powershell-ad-m365-scripts/
 │       └── Write-Log.ps1             # Shared logging module (imported by all src/ scripts)
 ├── tests/
 │   └── Write-Log.Tests.ps1           # Pester 5 unit tests for logging helper
-├── docs/                             # Runbook documentation for each major script
+├── docs/                             # Runbook documentation for all major scripts
+│   ├── README.md                     # Master docs index & portfolio landing page
 │   ├── Get-LicenseOptimizationReport.md
 │   ├── Get-StaleGuestReport.md
 │   ├── Export-ConditionalAccessPolicies.md
-│   └── Get-IntuneDeviceCompliance.md
+│   ├── Get-IntuneDeviceCompliance.md
+│   ├── New-BulkADUsers.md
+│   ├── Get-ADStaleUsers.md
+│   └── Get-ADGroupAudit.md
 ├── examples/                         # Sanitized sample CSV outputs (no real tenant data)
 │   ├── LicenseOptimization_Users_sample.csv
 │   ├── LicenseOptimization_SKUs_sample.csv
@@ -240,7 +246,8 @@ Bulk-provisions AD user accounts from a CSV. Places each user in the correct OU,
 .\New-BulkADUsers.ps1 -WhatIf                            # Preview only
 ```
 
-**Input:** `SampleUsers.csv` | **Output:** `BulkADUsers_Log_<timestamp>.csv`
+**Input:** `SampleUsers.csv` | **Output:** `BulkADUsers_Log_<timestamp>.csv`  
+**Full docs:** [docs/New-BulkADUsers.md](./docs/New-BulkADUsers.md)
 
 ---
 
@@ -252,7 +259,8 @@ Finds enabled AD accounts inactive beyond a threshold (default: 90 days). Export
 .\Get-ADStaleUsers.ps1 -DaysInactive 60 -DisableAccounts -WhatIf
 ```
 
-**Output:** `StaleUsers_<date>.csv`
+**Output:** `StaleUsers_<date>.csv`  
+**Full docs:** [docs/Get-ADStaleUsers.md](./docs/Get-ADStaleUsers.md)
 
 ---
 
@@ -264,7 +272,8 @@ Enumerates all AD groups and exports enriched membership reports (enabled status
 .\Get-ADGroupAudit.ps1 -GroupFilter "IT-*" -IncludeNestedMembers
 ```
 
-**Output:** `ADGroupAudit_<timestamp>.csv`
+**Output:** `ADGroupAudit_<timestamp>.csv`  
+**Full docs:** [docs/Get-ADGroupAudit.md](./docs/Get-ADGroupAudit.md)
 
 ---
 
