@@ -1,6 +1,9 @@
+Here's the complete, cleaned-up README with the Safety model section moved to the proper spot, the offboarding row added to the problems table, and consistent spacing throughout. Select-all → delete → paste → commit.
+
+```markdown
 # EF_SYS | PowerShell AD & M365 Admin Scripts
 
-> **Elazar Ferrer** — IT Systems & Identity Administrator  
+> **Elazar Ferrer** — IT Systems & Identity Administrator
 > Active Directory • Microsoft 365 • Entra ID • Intune • PowerShell Automation
 
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B%20%7C%207%2B-blue?logo=powershell)
@@ -26,6 +29,7 @@ Production-grade PowerShell scripts for enterprise AD and M365 administration. B
 | Document Conditional Access before changes | `Export-ConditionalAccessPolicies.ps1` | Manual screenshots → **automated CSV/JSON** |
 | Identify non-compliant Intune devices | `Get-IntuneDeviceCompliance.ps1` | Manual portal review → **filterable report** |
 | Back up all GPOs before a change window | `Backup-AllGPOs.ps1` | Manual export → **one command** |
+| Offboard a user across AD / Exchange / OneDrive / Teams / M365 | `examples/Invoke-UserOffboarding.ps1` | 45 min → **< 2 min** + full audit trail |
 
 ---
 
@@ -40,9 +44,12 @@ powershell-ad-m365-scripts/
 │   │   ├── Export-ConditionalAccessPolicies.ps1
 │   │   └── Get-IntuneDeviceCompliance.ps1
 │   └── helpers/
-│       └── Write-Log.ps1             # Shared logging module (imported by all src/ scripts)
+│       ├── Write-Log.ps1             # Shared logging module (imported by all src/ scripts)
+│       ├── Write-EvidenceLog.ps1     # Structured JSONL audit trail
+│       └── Invoke-SafeAction.ps1     # Dry-run wrapper with automatic evidence logging
 ├── tests/
-│   └── Write-Log.Tests.ps1           # Pester 5 unit tests for logging helper
+│   ├── Write-Log.Tests.ps1           # Pester 5 unit tests for logging helper
+│   └── Invoke-SafeAction.Tests.ps1   # Pester 5 tests for the safety model
 ├── docs/                             # Runbook documentation for all major scripts
 │   ├── README.md                     # Master docs index & portfolio landing page
 │   ├── Get-LicenseOptimizationReport.md
@@ -53,7 +60,8 @@ powershell-ad-m365-scripts/
 │   ├── Get-ADStaleUsers.md
 │   ├── Get-ADGroupAudit.md
 │   └── Backup-AllGPOs.md
-├── examples/                         # Sanitized sample CSV outputs (no real tenant data)
+├── examples/                         # Sanitized sample outputs + reference scripts
+│   ├── Invoke-UserOffboarding.ps1    # End-to-end offboarding demonstrating the safety model
 │   ├── LicenseOptimization_Users_sample.csv
 │   ├── LicenseOptimization_SKUs_sample.csv
 │   ├── StaleGuests_sample.csv
@@ -112,7 +120,7 @@ cd powershell-ad-m365-scripts
 
 ## 🔐 Authentication Options
 
-All `src/graph/` scripts connect to Microsoft Graph. **No credentials are ever stored in code.**  
+All `src/graph/` scripts connect to Microsoft Graph. **No credentials are ever stored in code.**
 See [SECURITY.md](./SECURITY.md) for the full policy.
 
 ### Option A — Interactive (developer / one-off runs)
@@ -156,6 +164,7 @@ Connect-MgGraph -Identity   # Uses the VM/Function App's system-assigned managed
 ---
 
 #### 📊 [Get-LicenseOptimizationReport.ps1](./src/graph/Get-LicenseOptimizationReport.ps1)
+
 Identifies M365 license waste: inactive licensed users, high-cost SKU assignments for low-activity accounts, and over-provisioned SKUs. Exports per-user and org-level SKU CSV reports.
 
 **Use case:** Monthly license reviews, finance reporting, offboarding hygiene.
@@ -168,13 +177,14 @@ Identifies M365 license waste: inactive licensed users, high-cost SKU assignment
 .\src\graph\Get-LicenseOptimizationReport.ps1 -InactiveDays 60 -ExportPath "C:\Reports"
 ```
 
-**Required scopes:** `User.Read.All`, `Organization.Read.All`, `AuditLog.Read.All`  
-**Sample output:** [examples/LicenseOptimization_Users_sample.csv](./examples/LicenseOptimization_Users_sample.csv)  
+**Required scopes:** `User.Read.All`, `Organization.Read.All`, `AuditLog.Read.All`
+**Sample output:** [examples/LicenseOptimization_Users_sample.csv](./examples/LicenseOptimization_Users_sample.csv)
 **Full docs:** [docs/Get-LicenseOptimizationReport.md](./docs/Get-LicenseOptimizationReport.md)
 
 ---
 
 #### 👥 [Get-StaleGuestReport.ps1](./src/graph/Get-StaleGuestReport.ps1)
+
 Finds B2B guest accounts that haven't signed in for a configurable period (default: 90 days). Supports safe disable and remove actions with `-WhatIf` / `-Confirm`.
 
 **Use case:** Quarterly external access reviews, HIPAA/NIST identity hygiene, attack surface reduction.
@@ -190,13 +200,14 @@ Finds B2B guest accounts that haven't signed in for a configurable period (defau
 .\src\graph\Get-StaleGuestReport.ps1 -DisableGuests -Confirm
 ```
 
-**Required scopes:** `User.Read.All`, `AuditLog.Read.All` (+ `User.ReadWrite.All` for write actions)  
-**Sample output:** [examples/StaleGuests_sample.csv](./examples/StaleGuests_sample.csv)  
+**Required scopes:** `User.Read.All`, `AuditLog.Read.All` (+ `User.ReadWrite.All` for write actions)
+**Sample output:** [examples/StaleGuests_sample.csv](./examples/StaleGuests_sample.csv)
 **Full docs:** [docs/Get-StaleGuestReport.md](./docs/Get-StaleGuestReport.md)
 
 ---
 
 #### 🛡️ [Export-ConditionalAccessPolicies.ps1](./src/graph/Export-ConditionalAccessPolicies.ps1)
+
 Read-only export of all Conditional Access policies — state, user/group/app assignments, grant controls (MFA, compliant device, block), and session controls. Optional full-fidelity JSON archive.
 
 **Use case:** Pre-change baselines, post-change validation, SOC 2 / ISO 27001 compliance evidence.
@@ -209,13 +220,14 @@ Read-only export of all Conditional Access policies — state, user/group/app as
 .\src\graph\Export-ConditionalAccessPolicies.ps1 -ExportPath "C:\Reports\CA.csv" -ExportJson
 ```
 
-**Required scopes:** `Policy.Read.All`  
-**Sample output:** [examples/ConditionalAccessPolicies_sample.csv](./examples/ConditionalAccessPolicies_sample.csv)  
+**Required scopes:** `Policy.Read.All`
+**Sample output:** [examples/ConditionalAccessPolicies_sample.csv](./examples/ConditionalAccessPolicies_sample.csv)
 **Full docs:** [docs/Export-ConditionalAccessPolicies.md](./docs/Export-ConditionalAccessPolicies.md)
 
 ---
 
 #### 📱 [Get-IntuneDeviceCompliance.ps1](./src/graph/Get-IntuneDeviceCompliance.ps1)
+
 Reports device compliance state, last check-in, OS version, encryption status, and jailbreak detection for all Intune-managed devices. Filterable by compliance state and OS platform.
 
 **Use case:** Security reviews, endpoint posture reporting, stale device identification, CIS/NIST endpoint controls evidence.
@@ -228,8 +240,8 @@ Reports device compliance state, last check-in, OS version, encryption status, a
 .\src\graph\Get-IntuneDeviceCompliance.ps1 -ComplianceFilter NonCompliant -PlatformFilter Windows
 ```
 
-**Required scopes:** `DeviceManagementManagedDevices.Read.All`, `User.Read.All`  
-**Sample output:** [examples/IntuneDeviceCompliance_sample.csv](./examples/IntuneDeviceCompliance_sample.csv)  
+**Required scopes:** `DeviceManagementManagedDevices.Read.All`, `User.Read.All`
+**Sample output:** [examples/IntuneDeviceCompliance_sample.csv](./examples/IntuneDeviceCompliance_sample.csv)
 **Full docs:** [docs/Get-IntuneDeviceCompliance.md](./docs/Get-IntuneDeviceCompliance.md)
 
 ---
@@ -239,6 +251,7 @@ Reports device compliance state, last check-in, OS version, encryption status, a
 ---
 
 #### 👤 [New-BulkADUsers.ps1](./New-BulkADUsers.ps1)
+
 Bulk-provisions AD user accounts from a CSV. Places each user in the correct OU, sets a temporary password, enforces change-at-first-logon, and exports a timestamped results log.
 
 ```powershell
@@ -247,12 +260,13 @@ Bulk-provisions AD user accounts from a CSV. Places each user in the correct OU,
 .\New-BulkADUsers.ps1 -WhatIf                            # Preview only
 ```
 
-**Input:** `SampleUsers.csv` | **Output:** `BulkADUsers_Log_<timestamp>.csv`  
+**Input:** `SampleUsers.csv` | **Output:** `BulkADUsers_Log_<timestamp>.csv`
 **Full docs:** [docs/New-BulkADUsers.md](./docs/New-BulkADUsers.md)
 
 ---
 
 #### 🔍 [Get-ADStaleUsers.ps1](./Get-ADStaleUsers.ps1)
+
 Finds enabled AD accounts inactive beyond a threshold (default: 90 days). Exports a CSV and optionally disables accounts with `-WhatIf` support.
 
 ```powershell
@@ -260,12 +274,13 @@ Finds enabled AD accounts inactive beyond a threshold (default: 90 days). Export
 .\Get-ADStaleUsers.ps1 -DaysInactive 60 -DisableAccounts -WhatIf
 ```
 
-**Output:** `StaleUsers_<date>.csv`  
+**Output:** `StaleUsers_<date>.csv`
 **Full docs:** [docs/Get-ADStaleUsers.md](./docs/Get-ADStaleUsers.md)
 
 ---
 
 #### 🗂️ [Get-ADGroupAudit.ps1](./Get-ADGroupAudit.ps1)
+
 Enumerates all AD groups and exports enriched membership reports (enabled status, department, last logon). Supports nested group resolution and OU scoping.
 
 ```powershell
@@ -273,12 +288,13 @@ Enumerates all AD groups and exports enriched membership reports (enabled status
 .\Get-ADGroupAudit.ps1 -GroupFilter "IT-*" -IncludeNestedMembers
 ```
 
-**Output:** `ADGroupAudit_<timestamp>.csv`  
+**Output:** `ADGroupAudit_<timestamp>.csv`
 **Full docs:** [docs/Get-ADGroupAudit.md](./docs/Get-ADGroupAudit.md)
 
 ---
 
 #### 📋 [Get-M365LicenseReport.ps1](./Get-M365LicenseReport.ps1)
+
 Connects to Microsoft Graph and exports a per-user license assignment report with SKU-to-friendly-name mapping, available seats, and last sign-in.
 
 ```powershell
@@ -289,6 +305,7 @@ Connects to Microsoft Graph and exports a per-user license assignment report wit
 ---
 
 #### 💾 [Backup-AllGPOs.ps1](./Backup-AllGPOs.ps1)
+
 Backs up every domain GPO to timestamped folders, generates an HTML report, supports ZIP compression and retention pruning.
 
 ```powershell
@@ -297,6 +314,28 @@ Backs up every domain GPO to timestamped folders, generates an HTML report, supp
 ```
 
 **Full docs:** [docs/Backup-AllGPOs.md](./docs/Backup-AllGPOs.md)
+
+---
+
+### 🧩 Reference Examples (`examples/`)
+
+---
+
+#### 🔄 [Invoke-UserOffboarding.ps1](./examples/Invoke-UserOffboarding.ps1)
+
+End-to-end user offboarding across AD, Exchange Online, OneDrive, Teams, and M365 licensing. Demonstrates the repo's safety model — every mutating step is wrapped in `Invoke-SafeAction` and logged to `logs/evidence-*.jsonl` with a single correlation ID for the whole run.
+
+```powershell
+# Dress rehearsal — no mutations, full evidence log.
+.\examples\Invoke-UserOffboarding.ps1 -Upn jdoe@corp.local `
+    -NewOwnerUpn manager@corp.local -WhatIf
+
+# Real run.
+.\examples\Invoke-UserOffboarding.ps1 -Upn jdoe@corp.local `
+    -NewOwnerUpn manager@corp.local -Reason voluntary
+```
+
+See the **Safety model** section below for the underlying pattern.
 
 ---
 
@@ -313,6 +352,7 @@ Backs up every domain GPO to timestamped folders, generates an HTML report, supp
 | `Get-StaleGuestReport.ps1` | `Microsoft.Graph` | `User.Read.All`, `AuditLog.Read.All` (+ `User.ReadWrite.All` for write actions) |
 | `Export-ConditionalAccessPolicies.ps1` | `Microsoft.Graph` | `Policy.Read.All` |
 | `Get-IntuneDeviceCompliance.ps1` | `Microsoft.Graph` | `DeviceManagementManagedDevices.Read.All`, `User.Read.All` |
+| `Invoke-UserOffboarding.ps1` | `ActiveDirectory`, `ExchangeOnlineManagement`, `Microsoft.Graph` | Domain Admin + `User.ReadWrite.All`, `Directory.ReadWrite.All` |
 
 **Principle of Least Privilege:** Always grant only the scopes your run requires. For report-only runs, read scopes are sufficient. See [SECURITY.md](./SECURITY.md) for app registration guidance.
 
@@ -328,7 +368,7 @@ Install-Module Pester -Force -SkipPublisherCheck
 Invoke-Pester .\tests\ -Output Detailed
 
 # Run a single test file
-Invoke-Pester .\tests\Write-Log.Tests.ps1 -Output Detailed
+Invoke-Pester .\tests\Invoke-SafeAction.Tests.ps1 -Output Detailed
 ```
 
 ---
@@ -340,25 +380,13 @@ Invoke-Pester .\tests\Write-Log.Tests.ps1 -Output Detailed
 - **No secrets in code** — credentials, tokens, and tenant IDs must never be committed (`.gitignore` blocks common secret file types)
 - **Test before production** — run with `-WhatIf` (where supported) in a lab or staging environment first
 - **Least-privilege** — use dedicated service accounts or app registrations scoped to the permissions each script needs
-- **Audit all executions** — keep the timestamped logs generated by each script in a secured, access-controlled location
+- **Audit all executions** — every mutating script writes an append-only JSONL evidence log (see the Safety model section below); keep these in a secured, access-controlled location
 - **Secure Graph auth** — prefer certificate-based or managed-identity authentication for unattended runs over interactive sign-in
 - **Review CSV inputs** — validate bulk-operation inputs before running to prevent unintended account creation or deletion
 
 ---
 
-## About
-
-Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with experience managing enterprise AD, M365, Entra ID, and Intune environments in healthcare-regulated settings.
-
-🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)  
-💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
-
----
-
-*See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines · [CHANGELOG.md](./CHANGELOG.md) for version history · [SECURITY.md](./SECURITY.md) for security policy · [LICENSE](./LICENSE) for terms of use*
-
-
-## Safety model — dry-run + evidence log
+## 🛡️ Safety Model — Dry-Run + Evidence Log
 
 Every state-changing script in this repo is wired through two helpers that make dress-rehearsal runs and forensic audit trails a default, not an afterthought.
 
@@ -442,3 +470,17 @@ Invoke-SafeAction -Action 'M365.RevokeLicense' -Target $upn `
 ```
 
 Rules of thumb: one correlation ID per logical run (set at the top of the entrypoint), one `Invoke-SafeAction` per mutating call (granularity matters for replay), put idempotency in `-SkipIf` so the evidence log stays honest about what actually happened, and never pass secrets or PHI through `Details` — they're serialized verbatim.
+
+---
+
+## About
+
+Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrator with experience managing enterprise AD, M365, Entra ID, and Intune environments in healthcare-regulated settings.
+
+🌐 Portfolio: [elazarf123.github.io/cyber-port](https://elazarf123.github.io/cyber-port)
+💼 LinkedIn: [linkedin.com/in/elazarf](https://linkedin.com/in/elazarf)
+
+---
+
+*See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines · [CHANGELOG.md](./CHANGELOG.md) for version history · [SECURITY.md](./SECURITY.md) for security policy · [LICENSE](./LICENSE) for terms of use*
+```
