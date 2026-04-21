@@ -356,3 +356,89 @@ Built and maintained by **Elazar Ferrer** — IT Systems & Identity Administrato
 ---
 
 *See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines · [CHANGELOG.md](./CHANGELOG.md) for version history · [SECURITY.md](./SECURITY.md) for security policy · [LICENSE](./LICENSE) for terms of use*
+
+
+## Safety model — dry-run + evidence log
+
+Every state-changing script in this repo is wired through two helpers that make dress-rehearsal runs and forensic audit trails a default, not an afterthought.
+
+### Dry-run mode
+
+Pass `-WhatIf` on any script and every destructive operation is short-circuited. Nothing is changed in AD, Exchange, or M365 — but an evidence record is still written for each step showing exactly what **would** have happened, with the same parameters and target. Use this before any first-time run against a production tenant, and when promoting a script across environments.
+
+```powershell
+# Dress rehearsal — zero mutations, full evidence log.
+.\examples\Invoke-UserOffboarding.ps1 -Upn jdoe@corp.local `
+    -NewOwnerUpn manager@corp.local -WhatIf
+
+# Real run.
+.\examples\Invoke-UserOffboarding.ps1 -Upn jdoe@corp.local `
+    -NewOwnerUpn manager@corp.local -Reason voluntary
+```
+
+### Evidence log
+
+Every run emits append-only JSONL records to `logs/evidence-YYYYMMDD.jsonl`. One line per action, one correlation ID per run, UTC timestamps, millisecond durations.
+
+Sample record (pretty-printed for readability; the file is one-line-per-record):
+
+```json
+{
+  "timestamp": "2026-04-21T14:02:17.413Z",
+  "schemaVer": "1.0",
+  "correlationId": "9f1ab21c-7d41-4a9c-8e51-33f0c2a8bb7e",
+  "actor": "eferrer@IT-WKS-04",
+  "action": "AD.DisableUser",
+  "target": "jdoe@corp.local",
+  "status": "Succeeded",
+  "dryRun": false,
+  "durationMs": 412,
+  "details": {
+    "runId": "9f1ab21c-7d41-4a9c-8e51-33f0c2a8bb7e",
+    "reason": "voluntary",
+    "ou": "Disabled Users"
+  }
+}
+```
+
+JSONL (one JSON object per line) is used so a half-written file from a crash is still parseable and so tools like `jq`, Splunk, and Sentinel ingest it natively.
+
+### Replay or audit a run
+
+Pull every step of a single run:
+
+```powershell
+Get-Content logs/evidence-20260421.jsonl |
+  ConvertFrom-Json |
+  Where-Object correlationId -eq '9f1ab21c-7d41-4a9c-8e51-33f0c2a8bb7e' |
+  Sort-Object timestamp |
+  Format-Table timestamp, action, status, durationMs
+```
+
+### Status values
+
+| Status      | Meaning                                                    |
+|-------------|------------------------------------------------------------|
+| `Attempted` | Action started. Written before the real command runs.      |
+| `Succeeded` | Action completed. Written with `durationMs`.               |
+| `Failed`    | Action threw. Written with `error` + `durationMs`; the exception is re-raised so the caller can decide stop/continue. |
+| `DryRun`    | `-WhatIf` was set; no mutation occurred.                   |
+| `Skipped`   | `SkipIf` predicate returned `$true` (idempotent short-circuit). |
+
+### Rolling your own script
+
+Wrap every mutating call in `Invoke-SafeAction`:
+
+```powershell
+. .\src\helpers\Write-EvidenceLog.ps1
+. .\src\helpers\Invoke-SafeAction.ps1
+
+$script:EvidenceCorrelationId = [guid]::NewGuid().Guid
+
+Invoke-SafeAction -Action 'M365.RevokeLicense' -Target $upn `
+    -Details @{ sku = 'ENTERPRISEPACK'; ticket = 'INC-1234' } `
+    -SkipIf { -not (Get-MgUserLicenseDetail -UserId $upn) } `
+    -ScriptBlock { Set-MgUserLicense -UserId $upn -RemoveLicenses @($e3Sku) }
+```
+
+Rules of thumb: one correlation ID per logical run (set at the top of the entrypoint), one `Invoke-SafeAction` per mutating call (granularity matters for replay), put idempotency in `-SkipIf` so the evidence log stays honest about what actually happened, and never pass secrets or PHI through `Details` — they're serialized verbatim.
