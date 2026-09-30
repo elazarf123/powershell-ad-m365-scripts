@@ -1,172 +1,76 @@
-﻿# Enterprise Active Directory & Microsoft 365 Automation Suite
+# Active Directory & Microsoft 365 PowerShell Toolkit
 
-## Overview
-A modular, production-ready PowerShell automation toolkit engineered for enterprise identity management, Active Directory Domain Services (AD DS) hygiene, Microsoft 365 tenant administration, and security compliance auditing. 
+PowerShell scripts for day-to-day identity administration and audit evidence: provisioning and auditing Active Directory, and reporting on Microsoft 365, Entra ID, and Intune through Microsoft Graph. Scripts that change anything support `-WhatIf`, and the Graph scripts are read-only unless you pass an explicit action switch.
 
-Every script is built according to enterprise PowerShell best practices, featuring advanced function support (`[CmdletBinding()]`), parameter validation, `-WhatIf` / `-Confirm` safety gates, structured transcript logging, and Pester unit test coverage.
+## Scripts
 
-```mermaid
-graph TD
-    subgraph Input Sources
-        A[CSV User Roster]
-        B[AD DS Database]
-        C[Microsoft Graph API]
-    end
+### Active Directory (repo root)
 
-    subgraph Administration & Hygiene Modules
-        D[New-BulkADUsers.ps1<br/>Bulk User Provisioning & OU Placement]
-        E[Find-StaleADAccounts.ps1<br/>Dormant Account Detection & Staging]
-        F[Audit-PrivilegedGroups.ps1<br/>Domain Admins & Tier-0 Membership Audit]
-        G[Get-M365LicenseReport.ps1<br/>M365 SKU Allocation & Inactive User Audit]
-        H[Backup-GPOPolicies.ps1<br/>Group Policy Backup & XML Versioning]
-    end
+| Script | What it does | Changes anything? |
+| :--- | :--- | :--- |
+| [`New-BulkADUsers.ps1`](New-BulkADUsers.ps1) | Creates AD users from a CSV, places each in its OU, sets a temporary password that must be changed at first logon, and logs results | Yes; supports `-WhatIf` |
+| [`Get-ADStaleUsers.ps1`](Get-ADStaleUsers.ps1) | Finds enabled accounts with no logon in N days (default 90) and exports a CSV; `-DisableAccounts` disables them | Only with `-DisableAccounts`; supports `-WhatIf` |
+| [`Get-ADGroupAudit.ps1`](Get-ADGroupAudit.ps1) | Lists group members with status, last logon, and department; `-IncludeNestedMembers` resolves nesting | No |
+| [`Backup-AllGPOs.ps1`](Backup-AllGPOs.ps1) | Backs up every GPO to a timestamped folder with an HTML summary; optional ZIP and retention pruning | No (writes backups only) |
+| [`Get-M365LicenseReport.ps1`](Get-M365LicenseReport.ps1) | Exports each user's M365 licenses and last sign-in via Graph | No |
 
-    subgraph Core Framework
-        I[Write-Log.ps1<br/>Centralized Transcript & Error Logging]
-        J[Pester Unit Tests<br/>Syntax & Module Validation]
-    end
+### Microsoft Graph (`src/graph/`)
 
-    subgraph Output Artifacts
-        K[HTML & CSV Compliance Reports]
-        L[GPO Version Backups]
-        M[Automated Remediation Actions]
-    end
+| Script | What it does | Graph scopes |
+| :--- | :--- | :--- |
+| [`Get-LicenseOptimizationReport.ps1`](src/graph/Get-LicenseOptimizationReport.ps1) | Flags inactive licensed users, E5 users who may only need E3, and over-provisioned SKUs | `User.Read.All`, `Organization.Read.All`, `AuditLog.Read.All` |
+| [`Get-StaleGuestReport.ps1`](src/graph/Get-StaleGuestReport.ps1) | Finds B2B guests with no recent sign-in; optional `-DisableGuests` or `-RemoveGuests` | Read by default; `-WhatIf` / `-Confirm` on changes |
+| [`Export-ConditionalAccessPolicies.ps1`](src/graph/Export-ConditionalAccessPolicies.ps1) | Exports every Conditional Access policy to CSV (optional JSON) as a baseline or audit evidence | `Policy.Read.All` |
+| [`Get-IntuneDeviceCompliance.ps1`](src/graph/Get-IntuneDeviceCompliance.ps1) | Exports Intune device compliance with filters by state and platform | `DeviceManagementManagedDevices.Read.All`, `User.Read.All` |
 
-    A --> D
-    B --> E
-    B --> F
-    C --> G
-    B --> H
+### Shared helpers (`src/helpers/`)
 
-    D --> I
-    E --> I
-    F --> I
-    G --> I
-    H --> I
+- [`Write-Log.ps1`](src/helpers/Write-Log.ps1): leveled console and file logging
+- [`Invoke-SafeAction.ps1`](src/helpers/Invoke-SafeAction.ps1): runs a change only when `-WhatIf` isn't set
+- [`Write-EvidenceLog.ps1`](src/helpers/Write-EvidenceLog.ps1): append-only JSONL record of each state-changing action, for audit evidence
 
-    D --> M
-    E --> M
-    F --> K
-    G --> K
-    H --> L
-```
+### Example workflow (`examples/`)
 
----
+[`Invoke-UserOffboarding.ps1`](examples/Invoke-UserOffboarding.ps1) walks one user through offboarding across AD, Exchange Online, OneDrive, and M365 licensing, with a dry-run mode and an evidence trail.
 
-## Toolkit Architecture & Script Inventory
+Per-script documentation is in [`docs/`](docs/), and sample outputs are in [`examples/`](examples/).
 
-| Script | Domain | Primary Function | Safety Controls |
-| :--- | :--- | :--- | :--- |
-| **`New-BulkADUsers.ps1`** | Identity Provisioning | Creates users from CSV with randomized secure passwords, standard OU routing, and baseline security groups. | `-WhatIf`, Duplicate UPN check |
-| **`Find-StaleADAccounts.ps1`** | Hygiene & Deprovisioning | Identifies user/computer accounts inactive $\ge$ 90 days; optionally disables and moves to Stale Quarantine OU. | `-WhatIf`, `-DaysInactive`, Exclusion lists |
-| **`Audit-PrivilegedGroups.ps1`** | SecOps & Compliance | Audits recursive memberships in Tier-0 groups (*Domain Admins*, *Enterprise Admins*, *Schema Admins*). | Read-only, Baseline diff alerting |
-| **`Get-M365LicenseReport.ps1`** | Cloud Governance | Scans Entra ID / M365 tenants via Microsoft Graph to detect licensed users inactive $\ge$ 60 days to reclaim costs. | Read-only, Export to CSV/HTML |
-| **`Backup-GPOPolicies.ps1`** | Disaster Recovery | Exports and archives all domain Group Policy Objects with timestamps, XML metadata reports, and retention policies. | Read-only, Retention pruning |
+## Quick start
 
----
-
-## Enterprise Engineering Standards
-
-* **Idempotent & Safe Execution:** State-changing scripts support `SupportsShouldProcess` (`-WhatIf` and `-Confirm`) to allow administrators to simulate actions before making live directory modifications.
-* **Zero Hardcoded Credentials:** Designed for use with Microsoft Graph delegated authentication, managed service accounts, or credential parameters via `Get-Credential`.
-* **Structured Logging:** Centralized logging module (`Write-Log.ps1`) writes color-coded console output and timestamped log files with standardized log levels (`INFO`, `WARN`, `ERROR`, `DEBUG`).
-* **Test-Driven Automation:** Includes Pester test suites (`Tests/`) validating parameter bindings, mandatory attributes, and mock directory responses.
-
----
-
-## Script Modules & Code Examples
-
-### 1. Bulk User Provisioning (`New-BulkADUsers.ps1`)
-Provisions new Active Directory accounts from an HR intake CSV with automated UPN generation, department OU mapping, and randomized temporary passwords set to expire on initial logon.
+Requirements: Windows PowerShell 5.1 or PowerShell 7, the ActiveDirectory module (RSAT) for AD scripts, and the Microsoft Graph PowerShell SDK for Graph scripts.
 
 ```powershell
-# Preview bulk provisioning without making changes
-.\New-BulkADUsers.ps1 -CsvPath ".\Data\NewHires.csv" -TargetOU "OU=Employees,DC=enterprise,DC=local" -WhatIf
-
-# Execute live provisioning with transcript logging
-.\New-BulkADUsers.ps1 -CsvPath ".\Data\NewHires.csv" -TargetOU "OU=Employees,DC=enterprise,DC=local" -SendWelcomeEmail
-```
-
----
-
-### 2. Stale Account Detection & Quarantine (`Find-StaleADAccounts.ps1`)
-Queries the domain for accounts whose `lastLogonDate` or `pwdLastSet` exceeds the inactivity threshold.
-
-```powershell
-# Identify user accounts inactive for 90+ days
-.\Find-StaleADAccounts.ps1 -DaysInactive 90 -AccountType "User" -ReportOnly
-
-# Quarantine stale accounts to designated OU
-.\Find-StaleADAccounts.ps1 -DaysInactive 90 -AccountType "User" -DisableAccounts -MoveToOU "OU=Quarantine,DC=enterprise,DC=local"
-```
-
-#### Sample Output Report (`Outputs/Stale_Users_Report.csv`)
-| SamAccountName | UserPrincipalName | LastLogonDate | PasswordLastSet | DaysInactive | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `jdoe_contractor` | `jdoe@enterprise.local` | `2026-04-12` | `2026-01-10` | `135` | **Quarantined** |
-| `temp_service_test` | `temp_svc@enterprise.local` | `2026-02-01` | `2025-11-20` | `205` | **Quarantined** |
-
----
-
-### 3. Privileged Group Auditing (`Audit-PrivilegedGroups.ps1`)
-Recursively expands sensitive AD groups to detect nested group additions and unauthorized administrators.
-
-```powershell
-# Audit all sensitive groups and output compliance alert
-.\Audit-PrivilegedGroups.ps1 -Groups @("Domain Admins", "Enterprise Admins", "Account Operators") -ExportHtml
-```
-
----
-
-### 4. Microsoft 365 License Reclamation (`Get-M365LicenseReport.ps1`)
-Connects to Microsoft Graph API to cross-reference assigned licenses against user sign-in activity logs.
-
-```powershell
-# Generate M365 inactive license audit report
-Connect-MgGraph -Scopes "User.Read.All", "Reports.Read.All"
-.\Get-M365LicenseReport.ps1 -DaysInactive 60 -OutputPath ".\Outputs\M365_License_Optimization.html"
-```
-
----
-
-## Directory Structure
-
-```text
-|-- README.md                         # Project documentation and architecture
-|-- LICENSE                           # MIT License
-|-- Scripts/
-|   |-- ActiveDirectory/
-|   |   |-- New-BulkADUsers.ps1       # Bulk user creation & group assignment
-|   |   |-- Find-StaleADAccounts.ps1  # Inactive account detection & quarantine
-|   |   |-- Audit-PrivilegedGroups.ps1# Tier-0 group recursive membership audit
-|   |   `-- Backup-GPOPolicies.ps1    # Automated GPO backup & report generator
-|   |-- M365/
-|   |   `-- Get-M365LicenseReport.ps1 # Microsoft Graph license usage analyzer
-|   `-- Common/
-|       `-- Write-Log.ps1             # Centralized logging engine
-|-- Tests/
-|   `-- AD-Scripts.Tests.ps1          # Pester unit test suite
-`-- Data/
-    `-- Sample_NewHires.csv           # Sample CSV template for provisioning
-```
-
----
-
-## Getting Started & Prerequisites
-
-### Prerequisites
-* Windows PowerShell 5.1 or PowerShell 7.x
-* **ActiveDirectory** Module (RSAT)
-* **Microsoft.Graph** Module (`Install-Module Microsoft.Graph -Scope CurrentUser`)
-* **Pester** (`Install-Module Pester -Force -SkipPublisherCheck`)
-
-### Execution
-```powershell
-# 1. Clone the repository
 git clone https://github.com/elazarf123/powershell-ad-m365-scripts.git
 cd powershell-ad-m365-scripts
 
-# 2. Run the Pester unit tests to verify script integrity
-Invoke-Pester .\Tests\AD-Scripts.Tests.ps1 -Output Detailed
+# Preview bulk user creation from the sample CSV without making changes
+.\New-BulkADUsers.ps1 -CSVPath .\SampleUsers.csv -WhatIf
+
+# Report accounts inactive 60+ days
+.\Get-ADStaleUsers.ps1 -DaysInactive 60 -ExportPath .\StaleUsers.csv
+
+# Export Conditional Access policies (read-only)
+Connect-MgGraph -Scopes "Policy.Read.All"
+.\src\graph\Export-ConditionalAccessPolicies.ps1 -ExportJson
 ```
 
+## Tests
+
+Pester tests for the helper functions are in [`tests/`](tests/). They use Pester 4 syntax.
+
+```powershell
+Install-Module Pester -RequiredVersion 4.10.1 -Scope CurrentUser -SkipPublisherCheck
+Invoke-Pester .\tests
+```
+
+## Safety notes
+
+- Run anything that changes directory state with `-WhatIf` first.
+- Use certificate-based or delegated auth for Graph. Don't hardcode credentials.
+- `New-BulkADUsers.ps1` has a default temporary password for lab use. Always pass your own with `-DefaultPassword` outside a lab.
+
+See [`SECURITY.md`](SECURITY.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License
+
+MIT
