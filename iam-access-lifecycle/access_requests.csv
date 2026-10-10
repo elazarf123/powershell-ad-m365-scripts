@@ -1,0 +1,6 @@
+"Ticket","User","Role","Type","Requester","Approver","Status","Justification"
+"REQ-1001","iam.dlee","Claims-Processor","New","mgr.claims","dir.ops","Approved","New hire - claims team"
+"REQ-1002","iam.kpatel","Security-Admin","Change","iam.kpatel","iam.kpatel","Approved","Need admin to fix my own access"
+"REQ-1003","iam.mgarcia","Claims-Supervisor","Change","mgr.claims","","Pending","Promotion - awaiting director"
+"REQ-1004","iam.jsmith","Claims-Supervisor","Change","mgr.claims","dir.ops","Approved","Promotion to supervisor"
+"REQ-1005","iam.tnguyen","Billing-Admin","Change","mgr.billing","dir.ops","Approved","Role does not exist in catalog"
