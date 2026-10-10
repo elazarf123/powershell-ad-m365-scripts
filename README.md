@@ -3,7 +3,8 @@
 PowerShell scripts for day-to-day identity administration and audit evidence: provisioning and auditing Active Directory, and reporting on Microsoft 365, Entra ID, and Intune through Microsoft Graph. Scripts that change anything support `-WhatIf`, and the Graph scripts are read-only unless you pass an explicit action switch.
 
 ## Scripts
-
+### Measured results
+[Entra ID lifecycle benchmark](entra-benchmark/): 50 users provisioned in ~37 s vs ~100 min by hand.
 ### Active Directory (repo root)
 
 | Script | What it does | Changes anything? |
