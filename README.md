@@ -2,6 +2,10 @@
 
 PowerShell scripts for day-to-day identity administration and audit evidence: provisioning and auditing Active Directory, and reporting on Microsoft 365, Entra ID, and Intune through Microsoft Graph. Scripts that change anything support `-WhatIf`, and the Graph scripts are read-only unless you pass an explicit action switch.
 
+## Featured projects (measured results)
+- **[Entra ID access lifecycle lab](iam-access-lifecycle/)**: access requests with separation-of-duties checks, access review that caught and fixed 4 least-privilege violations, automated offboarding, full audit trail (NIST AC-2/5/6, AU-2).
+- **[Entra ID lifecycle benchmark](entra-benchmark/)**: 50 users provisioned in ~37 s vs ~100 min by hand; offboarded 50 in ~26 s.
+  
 ## Scripts
 ### Measured results
 [Entra ID lifecycle benchmark](entra-benchmark/): 50 users provisioned in ~37 s vs ~100 min by hand.
