@@ -1,0 +1,5 @@
+"Test","Items","TotalSeconds","PerItemSec","RunAt"
+"Bulk provisioning (create + group assign)","50","40.75","0.815","2026-10-09T16:13:01"
+"Stale-account scan (SKIPPED - needs Entra ID P1/P2)","0","0",,"2026-10-09T16:13:01"
+"Nested group audit (25 users resolved through 2 group levels)","25","0.51","0.02","2026-10-09T16:13:02"
+"Bulk disable (offboarding)","50","26.2","0.524","2026-10-09T16:13:28"
