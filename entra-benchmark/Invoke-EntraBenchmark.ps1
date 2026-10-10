@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Times common identity admin tasks in a LAB Microsoft Entra ID tenant via Microsoft Graph,
-    so you can put real, measured numbers on your resume.
+    to quantify time saved versus manual administration.
 
 .DESCRIPTION
     Tests (all objects are prefixed "bench." / "BM-" so they are easy to find and remove):
