@@ -1,8 +1,8 @@
-﻿# Entra ID Access Lifecycle Lab
+# Entra ID Access Lifecycle Lab
 
 A PowerShell + Microsoft Graph lab that runs the full identity access lifecycle in a Microsoft Entra ID tenant: **access requests with approval checks, periodic access reviews with remediation, and offboarding**, with every action written to an audit log.
 
-Built and run in a lab Entra ID tenant (free tier) on October 10, 2026.
+Built and run in a lab Entra ID tenant (free tier) on October 10, 2026. The tenant domain in the evidence files is redacted to `<tenant>.onmicrosoft.com`.
 
 ## Results
 
@@ -33,11 +33,11 @@ Evidence in this folder:
 **Request rules.** A ticket is granted only if it is Approved, has an approver, the approver is neither the requester nor the user, the role exists, and the account is active. Role changes remove access the old role had that the new role doesn't.
 
 **Review rules.** For every user, actual group membership is compared with the role:
-- Group not allowed by role â†’ privilege creep (admin groups flagged as excessive privilege)
-- Disabled account with any access â†’ flagged for removal
-- Required group missing â†’ flagged for review
+- Group not allowed by role → privilege creep (admin groups flagged as excessive privilege)
+- Disabled account with any access → flagged for removal
+- Required group missing → flagged for review
 
-**Offboarding.** Disable account â†’ revoke all sign-in sessions â†’ remove every role group â†’ mark role as Terminated.
+**Offboarding.** Disable account → revoke all sign-in sessions → remove every role group → mark role as Terminated.
 
 **Safety.** Every changing action supports `-WhatIf` to preview changes first.
 
@@ -56,7 +56,8 @@ Evidence in this folder:
 Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users, Microsoft.Graph.Groups -Scope CurrentUser
 Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","Directory.Read.All" -TenantId "<tenant>.onmicrosoft.com"
 
-.\IAM-AccessLifecycle.ps1 -Action Setup   -Domain "<tenant>.onmicrosoft.com"
+$env:ENTRA_LAB_DOMAIN = "<tenant>.onmicrosoft.com"   # or pass -Domain on each call
+.\IAM-AccessLifecycle.ps1 -Action Setup
 .\IAM-AccessLifecycle.ps1 -Action Request -WhatIf
 .\IAM-AccessLifecycle.ps1 -Action Request
 .\IAM-AccessLifecycle.ps1 -Action Review
@@ -68,7 +69,7 @@ Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","Directory.Re
 
 ## Lessons learned
 
-- **Disabled â‰  offboarded.** The review caught an account that had been disabled but still belonged to 2 groups, a common gap when offboarding stops at "disable."
+- **Disabled ≠ offboarded.** The review caught an account that had been disabled but still belonged to 2 groups, a common gap when offboarding stops at "disable."
 - **Test your own logic.** The first version of the review flagged that same disabled account as "missing access" after cleanup. Fixing it made the rule explicit: a disabled account should hold no access at all.
 
 > Lab use only. Never run against a production tenant.
