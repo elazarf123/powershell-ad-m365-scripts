@@ -10,7 +10,7 @@ Run in a **lab Microsoft Entra ID tenant** (free tier) on October 9, 2026.
 |-|-|-|
 |Provision 50 users + group assignment|**\~37 seconds** (0.75 s/user)|\~100 minutes (2 min/user, projected from 3 users timed at 6 min)|
 |Offboard (disable) 50 users|**\~26 seconds**|—|
-|Nested group audit (25 users, 3 group levels)|**< 0.5 seconds**|—|
+|Nested group audit (25 users, 3 nested groups)|**< 0.5 seconds**|—|
 |Stale-account scan (90+ days)|Skipped: requires Entra ID P1/P2|—|
 
 Raw data for every run: [`AllRuns.csv`](AllRuns.csv)
@@ -30,7 +30,7 @@ Raw data for every run: [`AllRuns.csv`](AllRuns.csv)
 ## What the script does
 
 * Generates a CSV of 50 test users and creates them with `New-MgUser`, forcing a password change at first sign-in
-* Builds a 3-level nested group chain and assigns half the users, then resolves membership with `Get-MgGroupTransitiveMember`
+* Builds a chain of 3 nested groups (2 levels of nesting) and assigns half the users, then resolves membership with `Get-MgGroupTransitiveMember`
 * Disables every test account (offboarding) with `Update-MgUser`
 * Uses a unique run tag per run because Entra keeps deleted usernames for 30 days
 * `-Cleanup` removes all test users and groups
@@ -40,8 +40,8 @@ Raw data for every run: [`AllRuns.csv`](AllRuns.csv)
 ```powershell
 Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users, Microsoft.Graph.Groups -Scope CurrentUser
 Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","Directory.Read.All" -TenantId "<your-tenant>.onmicrosoft.com" -UseDeviceCode
-.\\Invoke-EntraBenchmark.ps1 -UserCount 5 -Domain "<your-tenant>.onmicrosoft.com"
-.\\Invoke-EntraBenchmark.ps1 -Cleanup -Domain "<your-tenant>.onmicrosoft.com"
+.\Invoke-EntraBenchmark.ps1 -UserCount 5 -Domain "<your-tenant>.onmicrosoft.com"
+.\Invoke-EntraBenchmark.ps1 -Cleanup -Domain "<your-tenant>.onmicrosoft.com"
 ```
 
 > Lab use only. Never run against a production tenant.

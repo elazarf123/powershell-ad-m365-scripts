@@ -22,9 +22,11 @@
 [CmdletBinding()]
 param(
     [int]$UserCount = 50,
-    [string]$Domain = 'ferrerelazargmail.onmicrosoft.com',
+    [string]$Domain = $env:ENTRA_LAB_DOMAIN,
     [switch]$Cleanup
 )
+
+if (-not $Domain) { throw "Pass -Domain <tenant>.onmicrosoft.com or set `$env:ENTRA_LAB_DOMAIN." }
 
 Import-Module Microsoft.Graph.Users, Microsoft.Graph.Groups -ErrorAction Stop
 if (-not (Get-MgContext)) { throw "Not connected. Run Connect-MgGraph first." }
